@@ -1,0 +1,59 @@
+{
+  "package": "com.xiaomi.band.energycollector",
+  "name": "能量收集者",
+  "versionName": "1.1.2",
+  "versionCode": 8,
+  "minPlatformVersion": 1000,
+  "icon": "/common/images/icon.png",
+  "deviceTypeList": [
+    "watch"
+  ],
+  "features": [
+    {
+      "name": "system.sensor"
+    },
+    {
+      "name": "system.vibrator"
+    },
+    {
+      "name": "system.router"
+    },
+    {
+      "name": "system.brightness"
+    },
+    {
+      "name": "system.storage"
+    }
+  ],
+  "permissions": [],
+  "config": {
+    "logLevel": "debug",
+    "designWidth": 192
+  },
+  "router": {
+    "entry": "pages/index",
+    "pages": {
+      "pages/index": {
+        "component": "index",
+        "name": "index"
+      },
+      "pages/game": {
+        "component": "game",
+        "name": "game"
+      },
+      "pages/upgrade": {
+        "component": "upgrade",
+        "name": "upgrade"
+      },
+      "pages/settings": {
+        "component": "settings",
+        "name": "settings"
+      }
+    }
+  },
+  "display": {
+    "titleBar": false,
+    "menu": false,
+    "fullScreen": true
+  }
+}

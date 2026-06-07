@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": ["es6", "dom"],
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@system/*": ["node_modules/@system/*"]
+    },
+    "typeRoots": ["./node_modules/@types"],
+    "strict": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*.js",
+    "src/**/*.ux",
+    "src/**/*.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
+}

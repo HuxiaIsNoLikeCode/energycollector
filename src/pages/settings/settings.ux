@@ -1,0 +1,386 @@
+<template>
+  <div class="container">
+    <text class="title">游戏设置</text>
+    
+    <div class="setting-list">
+      <div class="setting-item">
+        <text class="setting-label">振动反馈</text>
+        <div class="toggle {{vibrateOn ? 'toggle-on' : 'toggle-off'}}" onclick="toggleVibrate">
+          <text class="toggle-text">{{vibrateOn ? '开' : '关'}}</text>
+        </div>
+      </div>
+      
+      <div class="setting-item">
+        <text class="setting-label">游戏难度</text>
+        <div class="difficulty-btns">
+          <div class="diff-btn {{difficulty === 0 ? 'diff-active' : ''}}" onclick="setDifficulty(0)">
+            <text class="diff-text">简单</text>
+          </div>
+          <div class="diff-btn {{difficulty === 1 ? 'diff-active' : ''}}" onclick="setDifficulty(1)">
+            <text class="diff-text">困难</text>
+          </div>
+          <div class="diff-btn {{difficulty === 2 ? 'diff-active' : ''}}" onclick="setDifficulty(2)">
+            <text class="diff-text">地狱</text>
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-item">
+        <text class="setting-label">粒子效果</text>
+        <div class="toggle {{particlesOn ? 'toggle-on' : 'toggle-off'}}" onclick="toggleParticles">
+          <text class="toggle-text">{{particlesOn ? '开' : '关'}}</text>
+        </div>
+      </div>
+    </div>
+
+    <div class="reset-area">
+      <div if="{{!confirmReset}}" class="reset-btn" onclick="askReset">
+        <text class="reset-text">重置用户数据</text>
+      </div>
+      <div if="{{confirmReset}}" class="reset-confirm">
+        <text class="reset-warn">确认清除所有数据?</text>
+        <div class="reset-btns-row">
+          <div class="reset-yes" onclick="doReset">
+            <text class="reset-yes-text">确认</text>
+          </div>
+          <div class="reset-no" onclick="cancelReset">
+            <text class="reset-no-text">取消</text>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info">
+      <text class="info-text">能量收集者 v1.0.6</text>
+      <text class="info-text">小米手环10 Pro</text>
+    </div>
+
+    <div if="{{showToast}}" class="toast">
+      <text class="toast-text">{{toastText}}</text>
+    </div>
+  </div>
+</template>
+
+<style>
+.container {
+  flex-direction: column;
+  align-items: center;
+  width: 192px;
+  height: 490px;
+  background-color: #000000;
+  padding-top: 20px;
+}
+
+.title {
+  font-size: 18px;
+  color: #ff00ff;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.setting-list {
+  flex-direction: column;
+  width: 170px;
+}
+
+.setting-item {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 170px;
+  height: 50px;
+  margin-bottom: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.setting-label {
+  font-size: 14px;
+  color: #00ffff;
+}
+
+.toggle {
+  width: 45px;
+  height: 24px;
+  border-radius: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.toggle-on {
+  background-color: #00ffff;
+}
+
+.toggle-off {
+  background-color: #333;
+}
+
+.toggle-text {
+  font-size: 12px;
+  color: #000;
+  font-weight: bold;
+}
+
+.difficulty-btns {
+  flex-direction: row;
+}
+
+.diff-btn {
+  width: 32px;
+  height: 24px;
+  margin-left: 2px;
+  border: 1px solid #666;
+  border-radius: 4px;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.diff-active {
+  border-color: #ff00ff;
+  background-color: rgba(255, 0, 255, 0.2);
+}
+
+.diff-text {
+  font-size: 10px;
+  color: #fff;
+}
+
+.info {
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.info-text {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.reset-area {
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.reset-btn {
+  width: 170px;
+  height: 40px;
+  border: 1px solid #ff4444;
+  border-radius: 6px;
+  background-color: rgba(255, 68, 68, 0.1);
+  justify-content: center;
+  align-items: center;
+}
+
+.reset-text {
+  font-size: 13px;
+  color: #ff4444;
+}
+
+.reset-confirm {
+  flex-direction: column;
+  align-items: center;
+  width: 170px;
+  padding: 10px;
+  border: 1px solid #ff4444;
+  border-radius: 6px;
+  background-color: rgba(255, 68, 68, 0.1);
+}
+
+.reset-warn {
+  font-size: 13px;
+  color: #ff4444;
+  margin-bottom: 10px;
+}
+
+.reset-btns-row {
+  flex-direction: row;
+  justify-content: center;
+}
+
+.reset-yes {
+  width: 60px;
+  height: 30px;
+  border: 1px solid #ff4444;
+  border-radius: 4px;
+  background-color: rgba(255, 68, 68, 0.3);
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.reset-yes-text {
+  font-size: 12px;
+  color: #ff4444;
+}
+
+.reset-no {
+  width: 60px;
+  height: 30px;
+  border: 1px solid #666;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.05);
+  justify-content: center;
+  align-items: center;
+}
+
+.reset-no-text {
+  font-size: 12px;
+  color: #999;
+}
+
+.toast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 20px;
+  background-color: rgba(0, 0, 0, 0.9);
+  border: 1px solid #00ffff;
+  border-radius: 4px;
+  z-index: 100;
+}
+
+.toast-text {
+  font-size: 14px;
+  color: #00ffff;
+}
+</style>
+
+<script>
+import vibrator from '@system.vibrator'
+import storage from '@system.storage'
+
+export default {
+  data: {
+    vibrateOn: true,
+    difficulty: 1,
+    particlesOn: true,
+    confirmReset: false,
+    showToast: false,
+    toastText: ''
+  },
+
+  onInit() {
+    var self = this
+    var app = this.$app
+    if (app && app.onDataReady) {
+      app.onDataReady(function() {
+        self.loadSettings()
+      })
+    }
+  },
+
+  onShow() {
+    this.loadSettings()
+  },
+
+  loadSettings() {
+    var self = this
+    // 优先从 storage 读取设置
+    storage.get({
+      key: 'appSettings',
+      success: function(data) {
+        try {
+          var saved = JSON.parse(data)
+          self.vibrateOn = saved.vibrateOn !== false
+          self.difficulty = saved.difficulty || 1
+          self.particlesOn = saved.particlesOn !== false
+        } catch (e) {
+          self._loadFromApp()
+        }
+      },
+      fail: function() {
+        self._loadFromApp()
+      }
+    })
+  },
+
+  _loadFromApp() {
+    var app = this.$app
+    if (app && app.settings) {
+      this.vibrateOn = app.settings.vibrateOn !== false
+      this.difficulty = app.settings.difficulty || 1
+      this.particlesOn = app.settings.particlesOn !== false
+    }
+  },
+
+  saveSettings() {
+    var data = JSON.stringify({
+      vibrateOn: this.vibrateOn,
+      difficulty: this.difficulty,
+      particlesOn: this.particlesOn
+    })
+    storage.set({ key: 'appSettings', value: data })
+
+    // best-effort 同步 $app 内存
+    try { var a = this.$app; if (a && a.settings) { a.settings.vibrateOn = this.vibrateOn; a.settings.difficulty = this.difficulty; a.settings.particlesOn = this.particlesOn } } catch(e) {}
+  },
+
+  toggleVibrate() {
+    this.vibrateOn = !this.vibrateOn
+    this.saveSettings()
+    if (this.vibrateOn) {
+      this.vibrateShort()
+    }
+  },
+
+  setDifficulty(level) {
+    this.difficulty = level
+    this.saveSettings()
+    this.vibrateShort()
+  },
+
+  toggleParticles() {
+    this.particlesOn = !this.particlesOn
+    this.saveSettings()
+    this.vibrateShort()
+  },
+
+  askReset() {
+    this.confirmReset = true
+    this.vibrateShort()
+  },
+
+  cancelReset() {
+    this.confirmReset = false
+  },
+
+  doReset() {
+    this.confirmReset = false
+    // 直接写 storage 重置游戏数据
+    storage.set({
+      key: 'gameData',
+      value: JSON.stringify({
+        highScore: 0,
+        energy: 0,
+        upgrades: { speed: 0, range: 0, efficiency: 0, cooldown: 0 }
+      })
+    })
+    // best-effort 同步 $app 内存
+    try { var a = this.$app; if (a && a.gameState) { a.gameState.energy = 0; a.gameState.highScore = 0; a.gameState.upgrades = { speed: 0, range: 0, efficiency: 0, cooldown: 0 } } } catch(e) {}
+    this.showToastMsg('数据已重置')
+    this.vibrateShort()
+  },
+
+  showToastMsg(text) {
+    this.toastText = text
+    this.showToast = true
+    var self = this
+    setTimeout(function() {
+      self.showToast = false
+    }, 1500)
+  },
+
+  vibrateShort() {
+    try {
+      vibrator.vibrate({ mode: 'short' })
+    } catch (e) {}
+  }
+}
+</script>

@@ -1,0 +1,145 @@
+<template>
+  <div>
+    <slot></slot>
+  </div>
+</template>
+
+<script>
+import storage from '@system.storage'
+
+export default {
+  data: {
+    gameState: {
+      score: 0,
+      energy: 0,
+      level: 1,
+      upgrades: {
+        speed: 0,
+        range: 0,
+        efficiency: 0,
+        cooldown: 0
+      },
+      highScore: 0
+    },
+    settings: {
+      vibrateOn: true,
+      difficulty: 1,
+      particlesOn: true
+    },
+    dataReady: false,
+    _listeners: []
+  },
+
+  onCreate() {
+    this._listeners = []
+    this.loadFromStorage()
+  },
+
+  onDestroy() {
+  },
+
+  onDataReady(fn) {
+    if (this.dataReady) {
+      fn()
+    } else {
+      this._listeners.push(fn)
+    }
+  },
+
+  _notifyReady() {
+    this.dataReady = true
+    for (var i = 0; i < this._listeners.length; i++) {
+      try {
+        this._listeners[i]()
+      } catch (e) {}
+    }
+    this._listeners = []
+  },
+
+  loadFromStorage() {
+    var self = this
+    var loaded = { state: false, settings: false }
+
+    function checkDone() {
+      if (loaded.state && loaded.settings) {
+        self._notifyReady()
+      }
+    }
+
+    storage.get({
+      key: 'gameData',
+      success: function(data) {
+        try {
+          var saved = JSON.parse(data)
+          self.gameState.highScore = saved.highScore || 0
+          self.gameState.energy = saved.energy || 0
+          if (saved.upgrades) {
+            self.gameState.upgrades.speed = saved.upgrades.speed || 0
+            self.gameState.upgrades.range = saved.upgrades.range || 0
+            self.gameState.upgrades.efficiency = saved.upgrades.efficiency || 0
+            self.gameState.upgrades.cooldown = saved.upgrades.cooldown || 0
+          }
+        } catch (e) {}
+        loaded.state = true
+        checkDone()
+      },
+      fail: function() {
+        loaded.state = true
+        checkDone()
+      }
+    })
+
+    storage.get({
+      key: 'appSettings',
+      success: function(data) {
+        try {
+          var saved = JSON.parse(data)
+          self.settings.vibrateOn = saved.vibrateOn !== undefined ? saved.vibrateOn : true
+          self.settings.difficulty = saved.difficulty || 1
+          self.settings.particlesOn = saved.particlesOn !== undefined ? saved.particlesOn : true
+        } catch (e) {}
+        loaded.settings = true
+        checkDone()
+      },
+      fail: function() {
+        loaded.settings = true
+        checkDone()
+      }
+    })
+  },
+
+  saveGameState() {
+    var data = JSON.stringify({
+      highScore: this.gameState.highScore,
+      energy: this.gameState.energy,
+      upgrades: this.gameState.upgrades
+    })
+    storage.set({ key: 'gameData', value: data })
+  },
+
+  saveSettings() {
+    var data = JSON.stringify(this.settings)
+    storage.set({ key: 'appSettings', value: data })
+  },
+
+  resetGame() {
+    this.gameState.score = 0
+    this.gameState.level = 1
+  },
+
+  addScore(points) {
+    this.gameState.score += points
+    if (this.gameState.score > this.gameState.highScore) {
+      this.gameState.highScore = this.gameState.score
+    }
+  },
+
+  addEnergy(amount) {
+    this.gameState.energy += amount
+  },
+
+  saveGameData() {
+    this.saveGameState()
+  }
+}
+</script>

@@ -1,0 +1,14 @@
+{
+  "name": "xiaomi-band-energy-collector",
+  "version": "1.0.0",
+  "description": "小米手环10 Pro能量收集游戏 - 赛博朋克风格动作反应游戏",
+  "scripts": {
+    "start": "aiot start",
+    "build": "aiot build",
+    "release": "aiot release"
+  },
+  "dependencies": {
+    "aiot-toolkit": "^2.0.0"
+  },
+  "devDependencies": {}
+}

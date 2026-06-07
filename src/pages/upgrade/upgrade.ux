@@ -1,0 +1,312 @@
+<template>
+  <div class="container">
+    <div class="header">
+      <text class="title">能力升级</text>
+      <text class="energy">能量: {{energy}}</text>
+    </div>
+    
+    <div class="upgrade-list">
+      <div class="upgrade-item" onclick="upgrade('speed')">
+        <div class="item-info">
+          <text class="item-name">移动速度</text>
+          <text class="item-level">Lv.{{upgrades.speed}}</text>
+        </div>
+        <text class="item-cost">100 ⚡</text>
+      </div>
+      
+      <div class="upgrade-item" onclick="upgrade('range')">
+        <div class="item-info">
+          <text class="item-name">收集范围</text>
+          <text class="item-level">Lv.{{upgrades.range}}</text>
+        </div>
+        <text class="item-cost">150 ⚡</text>
+      </div>
+      
+      <div class="upgrade-item" onclick="upgrade('efficiency')">
+        <div class="item-info">
+          <text class="item-name">吸收效率</text>
+          <text class="item-level">Lv.{{upgrades.efficiency}}</text>
+        </div>
+        <text class="item-cost">200 ⚡</text>
+      </div>
+      
+      <div class="upgrade-item" onclick="upgrade('cooldown')">
+        <div class="item-info">
+          <text class="item-name">技能冷却</text>
+          <text class="item-level">Lv.{{upgrades.cooldown}}</text>
+        </div>
+        <text class="item-cost">250 ⚡</text>
+      </div>
+    </div>
+    
+    <div class="stats">
+      <text class="stats-title">当前属性</text>
+      <text class="stats-item">操控: +{{upgrades.speed * 0.5}} 倾斜范围</text>
+      <text class="stats-item">范围: +{{upgrades.range * 8}}px 收集</text>
+      <text class="stats-item">效率: +{{upgrades.efficiency * 30}}% 能量</text>
+      <text class="stats-item">冷却: -{{upgrades.cooldown}}s 技能CD</text>
+    </div>
+    
+    <div if="{{showToast}}" class="toast">
+      <text class="toast-text">{{toastText}}</text>
+    </div>
+  </div>
+</template>
+
+<style>
+.container {
+  flex-direction: column;
+  align-items: center;
+  width: 192px;
+  height: 490px;
+  background-color: #000000;
+  padding-top: 15px;
+}
+
+.header {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 170px;
+  margin-bottom: 15px;
+}
+
+.title {
+  font-size: 18px;
+  color: #ff00ff;
+  font-weight: bold;
+}
+
+.energy {
+  font-size: 14px;
+  color: #ffff00;
+}
+
+.upgrade-list {
+  flex-direction: column;
+  width: 170px;
+}
+
+.upgrade-item {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 170px;
+  height: 50px;
+  margin-bottom: 8px;
+  padding-left: 10px;
+  padding-right: 10px;
+  border: 1px solid #00ffff;
+  border-radius: 4px;
+  background-color: rgba(0, 255, 255, 0.05);
+}
+
+.item-info {
+  flex-direction: column;
+}
+
+.item-name {
+  font-size: 14px;
+  color: #00ffff;
+}
+
+.item-level {
+  font-size: 11px;
+  color: #ff00ff;
+  margin-top: 2px;
+}
+
+.item-cost {
+  font-size: 13px;
+  color: #ffff00;
+}
+
+.stats {
+  flex-direction: column;
+  width: 170px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ff00ff;
+  border-radius: 4px;
+  background-color: rgba(255, 0, 255, 0.05);
+}
+
+.stats-title {
+  font-size: 14px;
+  color: #ff00ff;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.stats-item {
+  font-size: 12px;
+  color: #00ffff;
+  margin-bottom: 4px;
+}
+
+.toast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 20px;
+  background-color: rgba(0, 0, 0, 0.9);
+  border: 1px solid #00ffff;
+  border-radius: 4px;
+  z-index: 100;
+}
+
+.toast-text {
+  font-size: 14px;
+  color: #00ffff;
+}
+</style>
+
+<script>
+import vibrator from '@system.vibrator'
+import storage from '@system.storage'
+
+export default {
+  data: {
+    energy: 0,
+    upgrades: {
+      speed: 0,
+      range: 0,
+      efficiency: 0,
+      cooldown: 0
+    },
+    showToast: false,
+    toastText: ''
+  },
+
+  onInit() {
+    var self = this
+    var app = this.$app
+    if (app && app.onDataReady) {
+      app.onDataReady(function() {
+        self.loadData()
+      })
+    }
+  },
+
+  onShow() {
+    this.loadData()
+  },
+
+  loadData() {
+    var self = this
+    // 优先从 storage 读取最新数据（游戏页直接写 storage）
+    storage.get({
+      key: 'gameData',
+      success: function(data) {
+        try {
+          var saved = JSON.parse(data)
+          self.energy = saved.energy || 0
+          self.upgrades = {
+            speed: saved.upgrades ? (saved.upgrades.speed || 0) : 0,
+            range: saved.upgrades ? (saved.upgrades.range || 0) : 0,
+            efficiency: saved.upgrades ? (saved.upgrades.efficiency || 0) : 0,
+            cooldown: saved.upgrades ? (saved.upgrades.cooldown || 0) : 0
+          }
+          // 同步到 $app 内存
+          self._syncToApp()
+        } catch (e) {
+          self._loadFromApp()
+        }
+      },
+      fail: function() {
+        self._loadFromApp()
+      }
+    })
+  },
+
+  _loadFromApp() {
+    var app = this.$app
+    if (app && app.gameState) {
+      this.energy = app.gameState.energy || 0
+      this.upgrades = {
+        speed: app.gameState.upgrades.speed || 0,
+        range: app.gameState.upgrades.range || 0,
+        efficiency: app.gameState.upgrades.efficiency || 0,
+        cooldown: app.gameState.upgrades.cooldown || 0
+      }
+    }
+  },
+
+  _syncToApp() {
+    try {
+      var app = this.$app
+      if (app && app.gameState) {
+        app.gameState.energy = this.energy
+        app.gameState.upgrades = this.upgrades
+      }
+    } catch (e) {}
+  },
+
+  upgrade(type) {
+    var costs = { speed: 100, range: 150, efficiency: 200, cooldown: 250 }
+    var cost = costs[type]
+
+    if (this.energy >= cost) {
+      this.energy -= cost
+      this.upgrades[type]++
+
+      // 直接写 storage（核心持久化）
+      var saveData = JSON.stringify({
+        highScore: 0, // 升级页不改变最高分，保留原值需从 storage 读，这里简化处理
+        energy: this.energy,
+        upgrades: this.upgrades
+      })
+      // 读取现有数据保留 highScore
+      var self = this
+      storage.get({
+        key: 'gameData',
+        success: function(data) {
+          try {
+            var existing = JSON.parse(data)
+            saveData = JSON.stringify({
+              highScore: existing.highScore || 0,
+              energy: self.energy,
+              upgrades: self.upgrades
+            })
+          } catch (e) {}
+          storage.set({ key: 'gameData', value: saveData })
+          // 同步 $app 内存
+          self._syncToApp()
+        },
+        fail: function() {
+          storage.set({ key: 'gameData', value: saveData })
+          self._syncToApp()
+        }
+      })
+
+      this.showToastMsg('升级成功!')
+      this.vibrateShort()
+    } else {
+      this.showToastMsg('能量不足')
+      this.vibrateLong()
+    }
+  },
+
+  showToastMsg(text) {
+    this.toastText = text
+    this.showToast = true
+    var self = this
+    setTimeout(function() {
+      self.showToast = false
+    }, 1500)
+  },
+
+  vibrateShort() {
+    try {
+      vibrator.vibrate({ mode: 'short' })
+    } catch (e) {}
+  },
+
+  vibrateLong() {
+    try {
+      vibrator.vibrate({ mode: 'long' })
+    } catch (e) {}
+  }
+}
+</script>

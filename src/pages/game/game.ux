@@ -1,0 +1,799 @@
+<template>
+  <div class="container">
+    <div class="hud">
+      <div class="hud-row">
+        <text class="score">分数: {{score}}</text>
+        <text class="level">Lv.{{level}}</text>
+      </div>
+      <div class="hud-row">
+        <text class="energy-hud">E:{{earnedEnergy}}</text>
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div class="player"></div>
+
+      <div if="{{invincible}}" class="invincible-ring" style="left: 59px; top: 158px;"></div>
+      <div if="{{skillActive}}" class="skill-ring" style="{{skillRingStyle}}"></div>
+
+      <div for="{{particles}}" class="particle"
+           style="left: {{$item.x}}px; top: {{$item.y}}px; background-color: {{$item.color}}; width: {{$item.size}}px; height: {{$item.size}}px; border-radius: {{$item.size / 2}}px;">
+      </div>
+
+      <div for="{{obstacles}}" class="obstacle"
+           style="left: {{$item.x}}px; top: {{$item.y}}px; background-color: {{$item.color}};">
+      </div>
+
+      <div for="{{scorePopups}}" class="score-popup"
+           style="left: {{$item.x}}px; top: {{$item.y}}px; opacity: {{$item.opacity}};">
+        <text class="popup-text" style="color: {{$item.color}};">+{{$item.value}}</text>
+      </div>
+    </div>
+
+    <div class="skill-btn" onclick="useSkill">
+      <text class="skill-text">技能</text>
+      <text if="{{skillCooldown > 0}}" class="cooldown-text">{{skillCooldownText}}</text>
+    </div>
+
+    <div if="{{gameOver}}" class="over">
+      <text class="over-title">游戏结束</text>
+      <text class="over-score">分数: {{score}}</text>
+      <text class="over-energy">获得能量: {{earnedEnergy}}</text>
+      <text class="over-total">累计能量: {{totalEnergy}}</text>
+      <div class="over-btn" onclick="restart">
+        <text class="over-btn-text">重新开始</text>
+      </div>
+      <div class="over-btn" onclick="goBack">
+        <text class="over-btn-text">返回菜单</text>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+.container {
+  flex-direction: column;
+  align-items: center;
+  width: 192px;
+  height: 490px;
+  background-color: #000000;
+}
+
+.hud {
+  flex-direction: column;
+  width: 170px;
+  margin-top: 10px;
+}
+
+.hud-row {
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.score {
+  font-size: 14px;
+  color: #00ffff;
+  font-weight: bold;
+}
+
+.level {
+  font-size: 14px;
+  color: #ff00ff;
+  font-weight: bold;
+}
+
+.energy-hud {
+  font-size: 12px;
+  color: #ffff00;
+}
+
+.game-area {
+  width: 192px;
+  height: 380px;
+  position: relative;
+  overflow: hidden;
+}
+
+.player {
+  position: absolute;
+  left: 84px;
+  top: 183px;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: #00ffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 15px #00ffff;
+  z-index: 5;
+}
+
+.invincible-ring {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border: 3px solid #ffff00;
+  border-radius: 35px;
+  box-shadow: 0 0 25px #ffff00;
+  z-index: 4;
+}
+
+.skill-ring {
+  position: absolute;
+  border: 2px solid rgba(255, 255, 0, 0.6);
+  background-color: rgba(255, 255, 0, 0.08);
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
+  z-index: 4;
+}
+
+.particle {
+  position: absolute;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.obstacle {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ff6666;
+  box-shadow: 0 0 10px currentColor;
+  transform: rotate(45deg);
+}
+
+.score-popup {
+  position: absolute;
+  z-index: 20;
+}
+
+.popup-text {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.skill-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  width: 50px;
+  height: 50px;
+  border: 2px solid #ff00ff;
+  border-radius: 25px;
+  background-color: rgba(255, 0, 255, 0.2);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.skill-text {
+  font-size: 12px;
+  color: #ff00ff;
+}
+
+.cooldown-text {
+  font-size: 10px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.over {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 100;
+}
+
+.over-title {
+  font-size: 28px;
+  color: #ff0000;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.over-score {
+  font-size: 20px;
+  color: #00ffff;
+  margin-bottom: 5px;
+}
+
+.over-energy {
+  font-size: 16px;
+  color: #ffff00;
+  margin-bottom: 5px;
+}
+
+.over-total {
+  font-size: 14px;
+  color: #aaaaaa;
+  margin-bottom: 20px;
+}
+
+.over-btn {
+  width: 120px;
+  height: 40px;
+  border: 2px solid #00ffff;
+  border-radius: 6px;
+  background-color: rgba(0, 255, 255, 0.15);
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.over-btn-text {
+  font-size: 15px;
+  color: #00ffff;
+}
+</style>
+
+<script>
+import router from '@system.router'
+import sensor from '@system.sensor'
+import vibrator from '@system.vibrator'
+import brightness from '@system.brightness'
+import storage from '@system.storage'
+
+export default {
+  data: {
+    score: 0,
+    level: 1,
+    earnedEnergy: 0,
+    totalEnergy: 0,
+    gameOver: false,
+    particles: [],
+    obstacles: [],
+    scorePopups: [],
+    skillCooldown: 0,
+    skillCooldownText: '',
+    skillActive: false,
+    invincible: false,
+    tiltX: 0,
+    maxTilt: 3,
+    loop: null,
+    lastTime: 0,
+    scoreAccum: 0,
+
+    _baseEnergy: 0,
+    _baseHighScore: 0,
+    _gameStarted: false,
+    _saved: false,
+
+    upgrades: { speed: 0, range: 0, efficiency: 0, cooldown: 0 },
+    settings: { vibrateOn: true, difficulty: 1, particlesOn: true },
+    collectRange: 30,
+    energyMul: 1,
+    skillCooldownMax: 6,
+    obstacleSpeedMul: 1,
+    obstacleSpawnRate: 1,    // 难度影响障碍物生成频率
+    particleSpawnRate: 1,    // 难度影响粒子生成频率
+    particleSizeMul: 1,      // 难度影响粒子大小
+    particleValueMul: 1,     // 难度影响粒子分数/能量
+    collisionRange: 0,       // 难度影响碰撞判定（正值=更宽松）
+    skillRingStyle: ''
+  },
+
+  onInit() {
+    var self = this
+    var app = this.$app
+    self.loadSettings()
+    if (app && app.onDataReady) {
+      app.onDataReady(function() {
+        self._initFromApp()
+      })
+    } else {
+      self._initFromApp()
+    }
+  },
+
+  _initFromApp() {
+    var app = this.$app
+    if (app && app.gameState) {
+      this._baseEnergy = app.gameState.energy || 0
+      this._baseHighScore = app.gameState.highScore || 0
+      this.upgrades = {
+        speed: app.gameState.upgrades.speed || 0,
+        range: app.gameState.upgrades.range || 0,
+        efficiency: app.gameState.upgrades.efficiency || 0,
+        cooldown: app.gameState.upgrades.cooldown || 0
+      }
+      this.applyUpgrades()
+    }
+    if (!this._gameStarted) {
+      this.startGame()
+    }
+  },
+
+  onReady() {
+    this.keepScreenOn(true)
+  },
+
+  onDestroy() {
+    this.stopGame()
+    this.stopSensors()
+    this.keepScreenOn(false)
+    this.saveProgress()
+  },
+
+  loadSettings() {
+    var self = this
+    // 优先从 storage 读取设置
+    storage.get({
+      key: 'appSettings',
+      success: function(data) {
+        try {
+          var saved = JSON.parse(data)
+          self.settings.vibrateOn = saved.vibrateOn !== false
+          self.settings.difficulty = saved.difficulty || 1
+          self.settings.particlesOn = saved.particlesOn !== false
+          self.applyDifficulty()
+        } catch (e) {
+          self._loadSettingsFromApp()
+        }
+      },
+      fail: function() {
+        self._loadSettingsFromApp()
+      }
+    })
+  },
+
+  _loadSettingsFromApp() {
+    var app = this.$app
+    if (app && app.settings) {
+      this.settings.vibrateOn = app.settings.vibrateOn !== false
+      this.settings.difficulty = app.settings.difficulty || 1
+      this.settings.particlesOn = app.settings.particlesOn !== false
+      this.applyDifficulty()
+    }
+  },
+
+  // 三档难度：0=简单, 1=困难, 2=地狱
+  applyDifficulty() {
+    var diff = this.settings.difficulty
+    if (diff === 0 || diff === 'easy') {
+      // 简单：障碍物慢、粒子多、碰撞宽松
+      this.obstacleSpeedMul = 0.6
+      this.obstacleSpawnRate = 0.6
+      this.particleSpawnRate = 1.3
+      this.particleSizeMul = 1.2
+      this.particleValueMul = 0.8
+      this.collisionRange = 5
+    } else if (diff === 1 || diff === 'hard') {
+      // 困难：障碍物快、粒子少但分数高
+      this.obstacleSpeedMul = 1.4
+      this.obstacleSpawnRate = 1.3
+      this.particleSpawnRate = 0.7
+      this.particleSizeMul = 0.85
+      this.particleValueMul = 1.5
+      this.collisionRange = -3
+    } else if (diff === 2 || diff === 'hell') {
+      // 地狱：障碍物更快更多、粒子极少极小但分数极高
+      this.obstacleSpeedMul = 1.8
+      this.obstacleSpawnRate = 1.6
+      this.particleSpawnRate = 0.45
+      this.particleSizeMul = 0.65
+      this.particleValueMul = 2.5
+      this.collisionRange = -6
+    } else {
+      // 默认（兼容旧数据）
+      this.obstacleSpeedMul = 1
+      this.obstacleSpawnRate = 1
+      this.particleSpawnRate = 1
+      this.particleSizeMul = 1
+      this.particleValueMul = 1
+      this.collisionRange = 0
+    }
+  },
+
+  applyUpgrades() {
+    this.collectRange = 30 + this.upgrades.range * 8
+    this.energyMul = 1 + this.upgrades.efficiency * 0.3
+    this.skillCooldownMax = Math.max(3, 6 - this.upgrades.cooldown * 1)
+    this.maxTilt = 3 + this.upgrades.speed * 0.5
+  },
+
+  startGame() {
+    this._gameStarted = true
+    this._saved = false
+    this.score = 0
+    this.level = 1
+    this.earnedEnergy = 0
+    this.totalEnergy = this._baseEnergy
+    this.gameOver = false
+    this.particles = []
+    this.obstacles = []
+    this.scorePopups = []
+    this.skillCooldown = 0
+    this.skillActive = false
+    this.invincible = false
+    this.scoreAccum = 0
+    this._lastSpawn = 0
+    this._lastObs = 0
+    this.lastTime = Date.now()
+    this.applyUpgrades()
+    this.applyDifficulty()
+    this.startSensors()
+    this.startLoop()
+  },
+
+  stopGame() {
+    if (this.loop) {
+      clearInterval(this.loop)
+      this.loop = null
+    }
+  },
+
+  startLoop() {
+    var self = this
+    this.loop = setInterval(function() {
+      if (!self.gameOver) {
+        self.update()
+      }
+    }, 50)
+  },
+
+  startSensors() {
+    var self = this
+    self._rawTiltX = 0
+    try {
+      sensor.subscribeAccelerometer({
+        callback: function(data) {
+          self._rawTiltX = self.clamp(data.x * 5, -self.maxTilt, self.maxTilt)
+        }
+      })
+    } catch (e) {}
+  },
+
+  stopSensors() {
+    try {
+      sensor.unsubscribeAccelerometer()
+    } catch (e) {}
+  },
+
+  clamp(value, min, max) {
+    if (value < min) return min
+    if (value > max) return max
+    return value
+  },
+
+  update() {
+    var now = Date.now()
+    var dt = (now - this.lastTime) / 1000
+    this.lastTime = now
+    if (dt > 0.2) dt = 0.2
+
+    this.tiltX = this.tiltX + (this._rawTiltX - this.tiltX) * 0.5
+
+    var speedMul = dt * 60
+
+    // 难度影响生成频率（值越大生成越频繁，除以该值降低间隔）
+    var spawnRate = Math.max(800, (2200 - this.level * 80) / this.particleSpawnRate)
+    var obstacleRate = Math.max(600, (2500 - this.level * 100) / this.obstacleSpawnRate)
+
+    this.scoreAccum += dt
+    if (this.scoreAccum >= 1) {
+      this.score += 5
+      this.scoreAccum -= 1
+    }
+
+    this.level = Math.floor(this.score / 300) + 1
+
+    var ticks = Math.floor(now / spawnRate)
+    if (ticks > this._lastSpawn) {
+      this._lastSpawn = ticks
+      if (this.settings.particlesOn) {
+        this.spawnParticle()
+      } else {
+        // 粒子关闭时只偶尔生成少量小粒子（约30%概率）
+        if (Math.random() < 0.3) {
+          this.spawnSimpleParticle()
+        }
+      }
+    }
+
+    var oTicks = Math.floor(now / obstacleRate)
+    if (oTicks > this._lastObs) {
+      this._lastObs = oTicks
+      this.spawnObstacle()
+    }
+
+    this.updateParticles(speedMul)
+    this.updateObstacles(speedMul)
+    this.updatePopups(speedMul)
+    this.checkCollisions()
+
+    if (this.skillCooldown > 0) {
+      this.skillCooldown -= dt
+      if (this.skillCooldown > 0) {
+        this.skillCooldownText = Math.ceil(this.skillCooldown) + 's'
+      } else {
+        this.skillCooldown = 0
+        this.skillCooldownText = ''
+      }
+    }
+  },
+
+  spawnParticle() {
+    var types = [
+      { color: '#00ffff', value: 10, size: 12, weight: 50 },
+      { color: '#ff00ff', value: 20, size: 14, weight: 30 },
+      { color: '#ffff00', value: 50, size: 16, weight: 15 },
+      { color: '#00ff88', value: 30, size: 13, weight: 5 }
+    ]
+    var roll = Math.random() * 100
+    var acc = 0
+    var type = types[0]
+    for (var i = 0; i < types.length; i++) {
+      acc += types[i].weight
+      if (roll < acc) {
+        type = types[i]
+        break
+      }
+    }
+
+    this.particles.push({
+      x: Math.random() * 160 + 10,
+      y: -20,
+      color: type.color,
+      value: Math.round(type.value * this.particleValueMul),
+      size: Math.max(4, Math.round(type.size * this.particleSizeMul)),
+      speed: 0.8 + Math.random() * 0.6
+    })
+  },
+
+  spawnSimpleParticle() {
+    this.particles.push({
+      x: Math.random() * 160 + 10,
+      y: -20,
+      color: '#006666',
+      value: Math.round(10 * this.particleValueMul),
+      size: Math.max(3, Math.round(6 * this.particleSizeMul)),
+      speed: 0.8 + Math.random() * 0.6
+    })
+  },
+
+  spawnObstacle() {
+    var types = [
+      { color: '#ff0000', speed: 1.5 },
+      { color: '#ff4400', speed: 1.8 },
+      { color: '#ff0044', speed: 2.2 }
+    ]
+    var type = types[Math.floor(Math.random() * types.length)]
+
+    this.obstacles.push({
+      x: Math.random() * 150 + 15,
+      y: -20,
+      speed: type.speed * this.obstacleSpeedMul,
+      color: type.color
+    })
+  },
+
+  updateParticles(speedMul) {
+    var tiltX = this.tiltX
+    var kept = []
+    for (var i = 0; i < this.particles.length; i++) {
+      var p = this.particles[i]
+      p.x += tiltX * speedMul * 1.0
+      p.y += p.speed * speedMul
+      if (p.x < -20) p.x = 212
+      if (p.x > 212) p.x = -20
+      if (p.y < 420) kept.push(p)
+    }
+    this.particles = kept
+  },
+
+  updateObstacles(speedMul) {
+    var tiltX = this.tiltX
+    var kept = []
+    for (var i = 0; i < this.obstacles.length; i++) {
+      var o = this.obstacles[i]
+      o.x += tiltX * speedMul * 0.8
+      o.y += o.speed * speedMul
+      if (o.x < -20) o.x = 212
+      if (o.x > 212) o.x = -20
+      if (o.y < 420) kept.push(o)
+    }
+    this.obstacles = kept
+  },
+
+  updatePopups(speedMul) {
+    var kept = []
+    for (var i = 0; i < this.scorePopups.length; i++) {
+      var p = this.scorePopups[i]
+      p.y -= 0.8 * speedMul
+      p.opacity -= 0.025 * speedMul
+      if (p.opacity > 0) kept.push(p)
+    }
+    this.scorePopups = kept
+  },
+
+  checkCollisions() {
+    var playerX = 96
+    var playerY = 195
+    var range = this.skillActive ? this.collectRange * 2 : this.collectRange
+
+    var kept = []
+    for (var i = 0; i < this.particles.length; i++) {
+      var p = this.particles[i]
+      var dx = Math.abs(p.x - playerX)
+      var dy = Math.abs(p.y - playerY)
+      if (dx < range && dy < range) {
+        this.collectParticle(p)
+      } else {
+        kept.push(p)
+      }
+    }
+    this.particles = kept
+
+    if (this.invincible) return
+
+    // 难度影响碰撞判定：collisionRange>0 更宽松（需更近才撞），<0 更严格
+    var obsHitDist = 22 + this.collisionRange
+    for (var j = 0; j < this.obstacles.length; j++) {
+      var o = this.obstacles[j]
+      var odx = Math.abs(o.x + 9 - playerX)
+      var ody = Math.abs(o.y + 9 - playerY)
+      if (odx < obsHitDist && ody < obsHitDist) {
+        this.hitObstacle()
+        return
+      }
+    }
+  },
+
+  collectParticle(p) {
+    var gained = Math.round(p.value * this.energyMul)
+    this.score += gained
+    this.earnedEnergy += gained
+
+    this.scorePopups.push({
+      x: p.x,
+      y: p.y,
+      value: gained,
+      opacity: 1,
+      color: p.color
+    })
+
+    if (this.settings.vibrateOn) {
+      this.vibrateShort()
+    }
+  },
+
+  // 先从 storage 读出现有真实值，在此基础上累加（不依赖 $app 快照）
+  // _saved 守卫在此方法内部，防止异步竞态导致重复写入
+  _writeResultToApp() {
+    if (this._saved) return
+    this._saved = true  // 立即标记，防止并发重入
+
+    var self = this
+    var earned = this.earnedEnergy || 0
+    var curScore = this.score || 0
+
+    storage.get({
+      key: 'gameData',
+      success: function(data) {
+        try {
+          var existing = JSON.parse(data)
+          var oldEnergy = existing.energy || 0
+          var oldHigh = existing.highScore || 0
+
+          var newTotal = oldEnergy + earned
+          var newHigh = Math.max(oldHigh, curScore)
+
+          self.totalEnergy = newTotal
+          // 更新本地快照（供 restart 使用）
+          self._baseEnergy = newTotal
+          self._baseHighScore = newHigh
+
+          var saveData = JSON.stringify({
+            highScore: newHigh,
+            energy: newTotal,
+            upgrades: existing.upgrades || self.upgrades
+          })
+          storage.set({ key: 'gameData', value: saveData })
+
+          // best-effort 同步 $app 内存
+          try { var a = self.$app; if (a && a.gameState) { a.gameState.energy = newTotal; a.gameState.highScore = newHigh } } catch(e) {}
+        } catch(e) {
+          self._writeFallback()
+        }
+      },
+      fail: function() {
+        self._writeFallback()
+      }
+    })
+  },
+
+  // storage 读取失败时用本地快照兜底
+  _writeFallback() {
+    var baseE = this._baseEnergy || 0
+    var earned = this.earnedEnergy || 0
+    var baseH = this._baseHighScore || 0
+    var curScore = this.score || 0
+
+    var newTotal = baseE + earned
+    var newHigh = Math.max(baseH, curScore)
+
+    this.totalEnergy = newTotal
+    this._baseEnergy = newTotal
+    this._baseHighScore = newHigh
+
+    storage.set({
+      key: 'gameData',
+      value: JSON.stringify({ highScore: newHigh, energy: newTotal, upgrades: this.upgrades })
+    })
+  },
+
+  hitObstacle() {
+    this.gameOver = true
+    this.stopGame()
+
+    if (this.settings.vibrateOn) {
+      this.vibrateLong()
+    }
+
+    this._writeResultToApp()
+  },
+
+  saveProgress() {
+    // 守卫在 _writeResultToApp() 内部，此处直接调用即可
+    this._writeResultToApp()
+  },
+
+  useSkill() {
+    if (this.skillCooldown > 0 || this.skillActive || this.gameOver) return
+
+    this.skillActive = true
+    this.skillCooldown = this.skillCooldownMax
+    if (this.settings.vibrateOn) {
+      this.vibrateShort()
+    }
+
+    var effectiveRange = this.collectRange * 2
+    var ringSize = Math.min(effectiveRange * 2, 160)
+    var ringRadius = Math.floor(ringSize / 2)
+    var ringLeft = 96 - ringRadius
+    var ringTop = 195 - ringRadius
+    this.skillRingStyle = 'width:' + ringSize + 'px;height:' + ringSize + 'px;top:' + ringTop + 'px;left:' + ringLeft + 'px;border-radius:' + ringRadius + 'px;'
+
+    var self = this
+    setTimeout(function() {
+      self.skillActive = false
+    }, 3000)
+  },
+
+  restart() {
+    this._baseEnergy = this._baseEnergy + this.earnedEnergy
+    this._baseHighScore = Math.max(this._baseHighScore, this.score)
+    this._saved = false
+    this.startGame()
+  },
+
+  goBack() {
+    this.saveProgress()
+    router.back()
+  },
+
+  vibrateShort() {
+    try {
+      vibrator.vibrate({ mode: 'short' })
+    } catch (e) {}
+  },
+
+  vibrateLong() {
+    try {
+      vibrator.vibrate({ mode: 'long' })
+    } catch (e) {}
+  },
+
+  keepScreenOn(on) {
+    try {
+      brightness.setKeepScreenOn({
+        keepScreenOn: on
+      })
+    } catch (e) {}
+  }
+}
+</script>

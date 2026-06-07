@@ -1,0 +1,165 @@
+<template>
+  <div class="container">
+    <div class="title-area">
+      <text class="title">能量收集者</text>
+      <text class="subtitle">ENERGY COLLECTOR</text>
+    </div>
+    
+    <div class="menu">
+      <div class="btn" onclick="startGame">
+        <text class="btn-text">开始游戏</text>
+      </div>
+      
+      <div class="btn" onclick="goUpgrade">
+        <text class="btn-text">能力升级</text>
+      </div>
+      
+      <div class="btn" onclick="goSettings">
+        <text class="btn-text">设置</text>
+      </div>
+    </div>
+    
+    <div class="stats">
+      <text class="stat">最高分: {{highScore}}</text>
+      <text class="stat">能量: {{energy}}</text>
+    </div>
+  </div>
+</template>
+
+<style>
+.container {
+  flex-direction: column;
+  align-items: center;
+  width: 192px;
+  height: 490px;
+  background-color: #000000;
+  padding-top: 50px;
+}
+
+.title-area {
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.title {
+  font-size: 22px;
+  color: #00ffff;
+  font-weight: bold;
+}
+
+.subtitle {
+  font-size: 10px;
+  color: #ff00ff;
+  margin-top: 5px;
+}
+
+.menu {
+  flex-direction: column;
+  align-items: center;
+}
+
+.btn {
+  width: 130px;
+  height: 40px;
+  margin-bottom: 12px;
+  border: 1px solid #00ffff;
+  border-radius: 4px;
+  background-color: rgba(0, 255, 255, 0.1);
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-text {
+  font-size: 14px;
+  color: #00ffff;
+}
+
+.stats {
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.stat {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+}
+</style>
+
+<script>
+import router from '@system.router'
+import storage from '@system.storage'
+
+export default {
+  data: {
+    highScore: 0,
+    energy: 0
+  },
+
+  onInit() {
+    var self = this
+    var app = this.$app
+    if (app && app.onDataReady) {
+      app.onDataReady(function() {
+        self.loadData()
+      })
+    }
+  },
+
+  onShow() {
+    this.loadData()
+  },
+
+  loadData() {
+    var self = this
+    // 优先从 storage 读取最新持久化数据（游戏页直接写 storage）
+    storage.get({
+      key: 'gameData',
+      success: function(data) {
+        try {
+          var saved = JSON.parse(data)
+          self.highScore = saved.highScore || 0
+          self.energy = saved.energy || 0
+          // 同步到 $app 内存（供其他页面使用）
+          try {
+            var app = self.$app
+            if (app && app.gameState) {
+              app.gameState.highScore = self.highScore
+              app.gameState.energy = self.energy
+            }
+          } catch (e) {}
+        } catch (e) {
+          // storage 解析失败，回退到 $app 内存值
+          self._loadFromApp()
+        }
+      },
+      fail: function() {
+        // storage 无数据，回退到 $app 内存值
+        self._loadFromApp()
+      }
+    })
+  },
+
+  _loadFromApp() {
+    var app = this.$app
+    if (app && app.gameState) {
+      this.highScore = app.gameState.highScore || 0
+      this.energy = app.gameState.energy || 0
+    }
+  },
+
+  startGame() {
+    router.push({ uri: '/pages/game' })
+  },
+
+  goUpgrade() {
+    router.push({ uri: '/pages/upgrade' })
+  },
+
+  goSettings() {
+    router.push({ uri: '/pages/settings' })
+  }
+}
+</script>
